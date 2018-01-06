@@ -1,0 +1,5 @@
+# IDE-specific folders of meta-data
+.cache/
+.vscode/
+# Python non-source stuff
+__pycache__/
