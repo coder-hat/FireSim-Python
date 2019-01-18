@@ -1,13 +1,18 @@
 # 2017-10-21
 
-
 class SquareGridGeometry:
     '''
     Provides the dimensions and directional math for a 2-dimensional grid of cells.
     The cells are square, and storing cell width allows class to provide cell-to-pixel conversions.
     '''
     OFF_GRID_INDEX = -1
+    ''' Value returned by methods to indicate location result was outside the grid dimensions -- class variable.'''
 
+    # DIRECTION_OFFSETS indices are bound to direction as follows:
+    #   0
+    # 3 . 1
+    #   2
+    # i.e., counter-clockwise from above.
     DIRECTION_OFFSETS = [
         (0, -1), # up, north
         (1, 0), # right, east

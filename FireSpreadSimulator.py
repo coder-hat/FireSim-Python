@@ -11,6 +11,8 @@ CONIFERS = 1
 ON_FIRE = 2
 BURNT_OUT = 3
 
+CELL_TYPE_NAMES = ['Bare Ground', 'Conifers', 'On Fire', 'Burnt Out']
+
 class CellParameters:
     '''
     Stores the per-cell values that are immutable during simulation.
@@ -113,6 +115,10 @@ class FireSpreadEngine:
                 cell_counts[cur_type] += 1
         return cell_counts
 
+    def get_current_grid_stats_text(self):
+        cell_counts = self.get_current_grid_stats()
+        return 'Cell Counts: ' + ' '.join(["{0}={1}".format(CELL_TYPE_NAMES[k], v) for (k, v) in cell_counts.items()])
+
     def print_current_grid(self):
         '''Prints an ascii dump of the current grid to stdout.'''
         for row in range(self.sgg.get_cell_rows()):
@@ -133,13 +139,18 @@ class FireSpreadSimulatorGui(tk.Frame):
             BURNT_OUT : tk.PhotoImage(file="BurntOut_32x32.png")
         }
         self.sim_engine = FireSpreadEngine()
-        # Add self-configuration of additional widgets here.
-        self.btn_step = tk.Button(master, text="STEP", command=self.simulator_step, borderwidth=0, highlightthickness=0)
-        self.btn_reset = tk.Button(master, text="RESET", command=self.simulator_reset, borderwidth=0, highlightthickness=0)
-        self.btn_step.grid(row=self.sim_engine.sgg.get_cell_rows(), column=0)
-        self.btn_reset.grid(row=self.sim_engine.sgg.get_cell_rows(), column=self.sim_engine.sgg.get_cell_cols())
         # Draw initial state of the GUI
         self.display_grid = self.create_grid()
+        # Add self-configuration of additional widgets here.
+        r_count = self.sim_engine.sgg.get_cell_rows()
+        c_count = self.sim_engine.sgg.get_cell_cols()
+        self.btn_step = tk.Button(master, text="STEP", command=self.simulator_step, bg='lightblue')
+        self.statusText = tk.StringVar()
+        self.lblStatus = tk.Label(self.master, textvariable=self.statusText, highlightthickness=0)
+        self.btn_reset = tk.Button(master, text="RESET", command=self.simulator_reset, bg='lightblue')
+        self.btn_step.grid(row=r_count, column=0, columnspan=2, sticky='we')
+        self.lblStatus.grid(row=r_count, column=2, columnspan=c_count-4, sticky='we')
+        self.btn_reset.grid(row=r_count, column=c_count-2, columnspan=2, sticky='we')
 
     def create_grid(self):
         '''Creates and returns a 2d grid of the Label widgets while adding them to this Frame.'''
@@ -159,6 +170,7 @@ class FireSpreadSimulatorGui(tk.Frame):
         for row in range(self.sim_engine.sgg.get_cell_rows()):
             for col in range(self.sim_engine.sgg.get_cell_cols()):
                 self.display_grid[row][col]["image"] = self.get_image((col, row))
+        self.statusText.set(self.sim_engine.get_current_grid_stats_text())
 
     def get_image(self, cell_location):
         col, row = cell_location
