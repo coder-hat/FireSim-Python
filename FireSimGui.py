@@ -16,7 +16,9 @@ from FireSimEngine import BURNT_OUT
 class FireSimGui(tk.Frame):
     '''Creates a master widget by inheriting from the Frame class.'''
     def __init__(self, master=None):
-        super().__init__(master)  
+        super().__init__(master)
+
+        master.title(string="Fire Spread Simulator")
 
         # specify custom style for widgets in the display grid
         # self.s = ttk.Style()

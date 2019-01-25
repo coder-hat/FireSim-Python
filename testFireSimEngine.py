@@ -15,8 +15,8 @@ class TestFireSpreadEngine(unittest.TestCase):
         # They will fail -- must be updated -- if the simulation configuration changes.
         cols = fse.sgg.get_cell_cols()
         rows = fse.sgg.get_cell_rows()
-        self.assertEquals(cols, 21, "cols")
-        self.assertEquals(rows, 17, "rows")
+        self.assertEquals(cols, FireSimEngine.NCOLS, "cols")
+        self.assertEquals(rows, FireSimEngine.NROWS, "rows")
 
         # The border cells of the simulation grid should be type BARE_GROUND
         expect = BARE_GROUND
