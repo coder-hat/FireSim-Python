@@ -67,7 +67,7 @@ class FireSimEngine:
                     cell_type = BARE_GROUND
                 cells_in_row.append(CellState(cell_type))
             new_grid.append(cells_in_row)
-        # Start a single cell near the center of the map on fire\
+        # Start a single cell near the center of the map on fire
         new_grid[nrows // 2][ncols // 2] = CellState(ON_FIRE)
         self.cells_on_fire = 1
         return new_grid
@@ -109,9 +109,12 @@ class FireSimEngine:
         adj_burning = 0
         for direction in range(4):
             adj_col, adj_row = self.sgg.get_adjacent_cell(cell_location, direction)
-            adj_cell = self.grid[adj_row][adj_col]
-            if adj_cell.cell_type == ON_FIRE:
-                adj_burning += 1
+            if (self.sgg.is_on_grid((adj_col, adj_row))):
+                adj_cell = self.grid[adj_row][adj_col]
+                if adj_cell.cell_type == ON_FIRE:
+                    adj_burning += 1
+            # else:
+            #     print("OFF GRID: loc={0} dir={1} adj_col={2} adj_row={3}".format(cell_location, direction, adj_col, adj_row))
         return adj_burning
 
     def get_current_grid_stats(self):

@@ -1,6 +1,6 @@
 # 2017-10-21
 '''
-Toy program that simulates wildfire spread using a simple cellular automata model.
+Toy program that simulates (very simplified) wildfire spread using a simple cellular automata model.
 '''
 import tkinter as tk
 from tkinter import ttk
