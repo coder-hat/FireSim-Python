@@ -3,10 +3,12 @@
 Very simplified wildfire spread simulator, using a simple cellular automata model.
 In this model:
 1. Only CONIFERS cells can burn.
-2. Burning Cells burn out in one simulation step.
-3. CONIFERS cells adjacent to burning cells have a fixed probability of catching fire.
+2. ON_FIRE cells burn out when their fuel amount reaches zero.
+3. Burning reduces a cells fuel by a fixed amount each simulation step.
+4. CONIFERS cells have a increasing probability of catching fire
+   based on the number of adjacent ON_FIRE cells (0.25 per cell). 
 '''
-from random import random
+import random
 from SquareGridGeometry import SquareGridGeometry
 
 BARE_GROUND = 0
@@ -31,19 +33,26 @@ CELL_PARAMETERS_TABLE = {
     BURNT_OUT : CellParameters(0.0)
 }
 
+MIN_FUEL = 1
+MAX_FUEL = 4
+
 
 class CellState:
     '''
     Stores mutable per-cell data for one cell in the simulation grid.
     '''
-    def __init__(self, cell_type=BARE_GROUND):
+    def __init__(self, cell_type=BARE_GROUND, cell_fuel=None):
         self.cell_type = cell_type
+        if cell_fuel == None:
+            self.cell_fuel = MAX_FUEL if self.cell_type == CONIFERS else 0
+        else:
+            self.cell_fuel = cell_fuel
 
     def __str__(self):
         return str(self.cell_type)
 
 
-class FireSimEngine:
+class FireSimFueledEngine:
     '''
     The simulator engine for this fire-spread model.
     '''
@@ -71,8 +80,8 @@ class FireSimEngine:
                     cell_type = BARE_GROUND
                 cells_in_row.append(CellState(cell_type))
             new_grid.append(cells_in_row)
-        # Start a single cell near the center of the map on fire
-        new_grid[nrows // 2][ncols // 2] = CellState(ON_FIRE)
+        # Start a single cell near the center of the map on fire\
+        new_grid[nrows // 2][ncols // 2] = CellState(ON_FIRE, cell_fuel=4)
         self.cells_on_fire = 1
         return new_grid
 
@@ -85,16 +94,23 @@ class FireSimEngine:
             cells_in_row = []
             for col in range(self.sgg.get_cell_cols()):
                 cur_cell = self.grid[row][col]
-                new_cell = cur_cell # default is "stay the same"
-                if cur_cell.cell_type == CONIFERS:
+                new_cell = CellState(cell_type=cur_cell.cell_type, cell_fuel=cur_cell.cell_fuel) # default is "stay the same"
+                #burn_count = self.get_adjacent_fire_count((col, row))
+                # 1. Determine if any cells catch on fire
+                if new_cell.cell_type == CONIFERS:  # only cell type that can burn
                     burn_count = self.get_adjacent_fire_count((col, row))
                     if burn_count > 0:
-                        ignite_probability = CELL_PARAMETERS_TABLE[cur_cell.cell_type].ignition_probability
-                        if random() < ignite_probability:
-                            new_cell = CellState(ON_FIRE)
-                elif cur_cell.cell_type == ON_FIRE:
-                    # currently, cells burn out after exactly one simulation step
-                    new_cell = CellState(BURNT_OUT)
+                        ignite_probability = burn_count * 0.25
+                        if random.random() < ignite_probability:
+                            new_cell.cell_type = ON_FIRE
+                # 2. Burndown (reduce fuel) for any on-fire cells, including any just ignited above.
+                if new_cell.cell_type == ON_FIRE:
+                    remaining_fuel = new_cell.cell_fuel - 1
+                    if remaining_fuel <= 0:
+                        new_cell.cell_fuel = 0
+                        new_cell.cell_type = BURNT_OUT
+                    else:
+                        new_cell.cell_fuel = remaining_fuel
                 cells_in_row.append(new_cell)
             new_grid.append(cells_in_row)
         self.grid = new_grid
@@ -113,12 +129,9 @@ class FireSimEngine:
         adj_burning = 0
         for direction in range(4):
             adj_col, adj_row = self.sgg.get_adjacent_cell(cell_location, direction)
-            if (self.sgg.is_on_grid((adj_col, adj_row))):
-                adj_cell = self.grid[adj_row][adj_col]
-                if adj_cell.cell_type == ON_FIRE:
-                    adj_burning += 1
-            # else:
-            #     print("OFF GRID: loc={0} dir={1} adj_col={2} adj_row={3}".format(cell_location, direction, adj_col, adj_row))
+            adj_cell = self.grid[adj_row][adj_col]
+            if adj_cell.cell_type == ON_FIRE:
+                adj_burning += 1
         return adj_burning
 
     def get_current_grid_stats(self):
@@ -136,7 +149,7 @@ class FireSimEngine:
 
     def get_current_grid_stats_text(self):
         cell_counts = self.get_current_grid_stats()
-        return 'Cell Counts: ' + ' '.join(["{0}={1}".format(CELL_TYPE_NAMES[k], v) for (k, v) in cell_counts.items()])
+        return 'Step=' + str(self.sim_step) + 'Cell Counts: ' + ' '.join(["{0}={1}".format(CELL_TYPE_NAMES[k], v) for (k, v) in cell_counts.items()])
 
     def print_current_grid(self):
         '''Prints an ascii dump of the current grid to stdout.'''

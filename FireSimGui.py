@@ -15,7 +15,7 @@ from FireSimEngine import BURNT_OUT
 
 class FireSimGui(tk.Frame):
     '''Creates a master widget by inheriting from the Frame class.'''
-    def __init__(self, master=None):
+    def __init__(self, master=None, engine=None):
         super().__init__(master)
 
         master.title(string="Fire Spread Simulator")
@@ -31,7 +31,7 @@ class FireSimGui(tk.Frame):
             ON_FIRE : tk.PhotoImage(file="OnFire_32x32.png"),
             BURNT_OUT : tk.PhotoImage(file="BurntOut_32x32.png")
         }
-        self.sim_engine = FireSimEngine()
+        self.sim_engine = engine
 
         # Draw initial state of the GUI
         self.display_grid = self.create_grid()
@@ -69,13 +69,13 @@ class FireSimGui(tk.Frame):
                 # NOTE 2019-1-25
                 # Following statement is commented out because it doesn't work under Mac OSX:
                 #   the border and highlightthickness args are ignored.
-                #label = tk.Label(self.master, image=img, borderwidth=0, highlightthickness=0)
+                label = tk.Label(self.master, image=img, borderwidth=0, highlightthickness=0)
                 # Following statement also doesn't work under Mac OSX:
                 #   even when Grid.TLabel is configured (see commented-out code in __init__), style is ignored. 
                 #label = ttk.Label(self.master, image=img, style='Grid.TLabel')
                 # However, the following statement DOES work under Mac OSX:
                 #   no border, and no highlightthickness are added to the label(s).
-                label = ttk.Label(self.master, image=img, borderwidth=0)
+                #label = ttk.Label(self.master, image=img, borderwidth=0)
                 label.grid(row=row, column=col)
                 # NOTE 2019-1-25 
                 # Possible future code left as comment/example below
